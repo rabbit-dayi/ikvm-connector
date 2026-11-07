@@ -9,6 +9,26 @@
 > 仓库里**不含**任何 ATEN 的 jar、DLL 或客户端证书（版权归厂商），
 > 需要你自己从 JNLP / 本机 JWS 缓存里取出（见“准备 viewer 目录”）。
 
+## 适用型号
+
+下面的结论来自这台机器的实测，型号 / 版本都记在这里：
+
+| 项目 | 型号 / 版本 |
+| --- | --- |
+| 整机 | Supermicro **SYS-7048GR-TR** |
+| 主板 | Supermicro **X10DRG-Q** |
+| 机箱 | Supermicro **CSE-747BTS-R2K04BP** |
+| iKVM | ATEN Java iKVM Viewer **V1.69.38**（主 jar `iKVM__V1.69.38.0x0.jar`，主类 `tw.com.aten.ikvm.KVMMain`） |
+| BMC 固件 | `BL_SUPERMICRO_X7SB3_2020-07-17_B0070`（IPMIFW 0390，构建 07/17/2020） |
+| BMC Web | 1.1（内核 2.6.28.9） |
+| BIOS | 3.2（11/22/2019） |
+| 出问题的证书 | iKVM jar 内置的**客户端**证书，**2026-05-17 到期**（`res/client.crt` / `res/client.key`） |
+
+凡是同一套 ATEN iKVM 的机器（X9 / X10 / X11 代 Supermicro 上很常见：JNLP 主类是
+`tw.com.aten.ikvm.KVMMain`、走双向 TLS、jar 里带 `client.crt`/`client.key`），
+失效原因和这里的处理方式都一样；其它厂商的 iKVM 只要也是“客户端证书过期 + BMC 时钟超前”，
+同样可以参考。
+
 ---
 
 ## 现象
@@ -29,7 +49,8 @@ Retry =1
 
 1. iKVM 用的是**双向 TLS**：jar 里内置了客户端证书（`res/client.crt` / `res/client.key`），
    服务端（BMC）要求出示它。
-2. 那张内置的**客户端证书在 2026-05-17 到期**，而 BMC 的时钟已经走到 2026 年以后
+2. 那张内置的**客户端证书在 2026-05-17 到期**（SYS-7048GR-TR / X10DRG-Q 这台机器上就是这一张，
+   2020-07-17 那版 BMC 固件烧进去的），而 BMC 的时钟已经走到 2026 年以后
    （BMC 会跟随主机时间，NTP 关掉也没用，它会自己同步回去）。
 3. 于是 BMC 在校验客户端证书时判定“证书已过期”，直接回 `alert 45 (certificate_expired)`，
    握手失败。
