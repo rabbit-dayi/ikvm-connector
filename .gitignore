@@ -1,0 +1,22 @@
+# build output
+dist/
+bin/
+obj/
+*.exe
+*.pdb
+
+# vendor binaries (do NOT commit)
+viewer/
+*.jar
+*.pfx
+*.crt
+*.key
+stunnel.exe
+
+# editor/tooling leftovers
+.dsh-ops-update-*.lock
+
+# local state
+settings.ini
+*.log
+服务器信息.txt
